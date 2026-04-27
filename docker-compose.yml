@@ -1,0 +1,71 @@
+name: smarttask
+
+services:
+  agent-core:
+    build:
+      context: ./agent-core
+      dockerfile: Dockerfile
+    container_name: smarttask-agent-core
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./agent-core:/app
+      - agent_data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379/0
+      - TZ=Asia/Shanghai
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - LLM_MODEL=${LLM_MODEL}
+      - AGENT_MAX_STEPS=${AGENT_MAX_STEPS}
+      - AGENT_TIMEOUT=${AGENT_TIMEOUT}
+      - FILE_BASE_DIR=${FILE_BASE_DIR}
+      - REDIS_TTL=${REDIS_TTL}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - smarttask-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: smarttask-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - smarttask-net
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: smarttask-frontend
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - agent-core
+  #   restart: unless-stopped
+  #   networks:
+  #     - smarttask-net
+
+volumes:
+  agent_data:
+  redis_data:
+
+networks:
+  smarttask-net:
+    driver: bridge
