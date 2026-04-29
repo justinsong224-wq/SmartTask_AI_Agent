@@ -8,4 +8,6 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-CMD sh -c "node_modules/.bin/vite preview --host 0.0.0.0 --port ${PORT:-4173}"
+ENV VITE_ALLOWED_HOSTS=all
+
+CMD sh -c "npm run preview -- --host 0.0.0.0 --port ${PORT:-4173}"
