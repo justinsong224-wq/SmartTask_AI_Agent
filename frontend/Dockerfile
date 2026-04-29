@@ -1,10 +1,11 @@
-FROM node:20-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
-# 不在容器里 npm install，直接用本地已装好的 node_modules
+COPY package*.json ./
+RUN npm install
+
 COPY . .
+RUN npm run build
 
-EXPOSE 5173
-
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD sh -c "npm run preview -- --host 0.0.0.0 --port ${PORT:-4173}"
