@@ -10,6 +10,6 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 4173,
-    allowedHosts: ['*'],   // 允许 Railway 域名访问
+    allowedHosts: ['all'],
   }
 })
