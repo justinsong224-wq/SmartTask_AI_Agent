@@ -6,6 +6,7 @@ import os
 import traceback
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from agent.loop import AgentLoop
 from api.routes import router as memory_router
@@ -17,6 +18,7 @@ app = FastAPI(
     version="0.4.0",
 )
 
+# ── CORS ───────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,31 +30,41 @@ app.add_middleware(
 # ── 注册记忆管理路由 ───────────────────────────────────
 app.include_router(memory_router)
 
-
 # ── 请求模型 ───────────────────────────────────────────
 class TaskRequest(BaseModel):
-    task:       str
+    task: str
     session_id: str = "default"
 
 
-# ── 路由 ───────────────────────────────────────────────
+# ── ✅ 新增：首页路由（关键） ───────────────────────────
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return """
+    <h1>🚀 SmartTask AI Agent 已上线</h1>
+    <p>服务运行正常</p>
+    <p><a href="/docs">进入 API 文档</a></p>
+    """
+
+
+# ── 健康检查 ───────────────────────────────────────────
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "version": "0.4.0"}
 
 
+# ── 调试环境变量 ───────────────────────────────────────
 @app.get("/debug/env")
 async def debug_env():
     return {
-        "SERPER_API_KEY":    os.getenv("SERPER_API_KEY",    "未设置"),
-        "LLM_PROVIDER":      os.getenv("LLM_PROVIDER",      "未设置"),
+        "SERPER_API_KEY": os.getenv("SERPER_API_KEY", "未设置"),
+        "LLM_PROVIDER": os.getenv("LLM_PROVIDER", "未设置"),
         "DASHSCOPE_API_KEY": os.getenv("DASHSCOPE_API_KEY", "未设置"),
     }
 
 
+# ── Agent 执行 ─────────────────────────────────────────
 @app.post("/api/agent/run")
 async def run_agent(request: TaskRequest):
-    """执行 Agent 任务"""
     if not request.task.strip():
         raise HTTPException(status_code=400, detail="任务内容不能为空")
     try:
@@ -67,9 +79,7 @@ async def run_agent(request: TaskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── 启动 ───────────────────────────────────────────────
 if __name__ == "__main__":
-    import os
-    import uvicorn
-
-    port = int(os.environ.get("PORT", 8000))  # 如果 PORT 未设置，默认 8000
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    port = int(os.environ.get("PORT", 8080))  # Railway 推荐默认 8080
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
