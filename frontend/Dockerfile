@@ -8,6 +8,6 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-ENV VITE_ALLOWED_HOSTS=all
+RUN npm install -g serve
 
-CMD sh -c "npm run preview -- --host 0.0.0.0 --port ${PORT:-4173}"
+CMD sh -c "serve -s dist -l ${PORT:-4173}"
