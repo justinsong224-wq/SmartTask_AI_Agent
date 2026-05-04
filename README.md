@@ -157,7 +157,7 @@ npm run dev
 
 **5. 访问**
 
-打开浏览器访问 `http://localhost:5173`
+打开浏览器访问 `https://smarttaskaiagent-production.up.railway.app`（冷启动需稍微等候）
 
 ### 环境变量说明
 
